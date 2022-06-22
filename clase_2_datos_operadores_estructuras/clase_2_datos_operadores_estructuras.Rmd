@@ -1,0 +1,456 @@
+---
+title: "Clase_2_operadores_datos_estructuras"
+author: "Yarfraz Nazuddeen"
+date: "9/6/2022"
+output: html_document
+---
+
+# Operadores, tipos y estructuras de datos
+
+# Operadores
+
+Les mostrare lo simbolos o operadores que se suelen utilizar para manejar datos. Solo seran listados con breves explicacioens. Mas adelante los revisaremos en accion con sus aplicaciones para el analisis de datos.
+
+## Operadores principales
+
+-   Operador de asignacion { \<- }
+
+Sirve para asignar un valor a un objeto. Se aplica:
+
+> nombre_del_objeto \<- dato
+
+El igual { = } tambien funciona como operador de asignacion, pero no es recomendable usarlo. Tiene otros usos dentro de funciones o como operador relacional.
+
+-   dos puntos { : }
+
+Sirven para indicar el rango entre 2 numeros
+
+```{r}
+1:10
+```
+
+-   Signo de dolar { \$ }
+
+Sirve para seleccionar una columna en un dataframe por su nombre. Se utiliza:
+
+> dataframe\$columna
+
+-   corchetes { [] }
+
+Sirven para seleccionar un dato en un objeto por su indice:
+
+> objeto[\#]
+
+Por sus coordenadas [fila, columna], en caso de dataframes y matrices:
+
+> objeto[#fila, #columna]
+
+## Operadores matematicos
+
+-   Suma { + }
+-   Resta { - }
+-   Multiplicacion { \* }
+-   Division { / }
+-   Potenciacion { \^ }
+-   Resto (de una division) { %% }
+-   Division en enteros { %/% } (Implica que el resultado no sera decimal)
+
+Tambien hay funciones y objetos matematicos como:
+
+```{r}
+log(1)
+pi 
+```
+
+## Operadores relacionales
+
+-   Mayor que { > }
+-   Menor que { \< }
+-   Mayor o igual que { >= }
+-   Menor o igual que { \<= }
+-   Igual { == }
+-   No igual a { != }
+
+## Operadores logicos
+
+-   Negacion { ! }
+-   Logical OR { \| }
+-   Logical AND { & }
+
+# Tipos de datos
+
+R entiende varios tipos de datos, pero para este curso nosotros vamos a enfocarnos en los siguientes>
+
+-   Character
+
+    -   Strings (character strings)
+
+-   Numericos
+
+    -   Numero enteros
+    -   Numeros fraccionados (decimales)
+    -   Imaginarios
+
+-   Logical
+
+    -   TRUE (verdadero)
+    -   FALSO (falso)
+
+-   NA
+
+    -   Representan datos ausentes
+
+PD: Existen otros tipos pero no seran discutidos en este curso.
+
+Podemos verificar el tipo de objeto con las funciones de la familia "is."
+
+> is.\< tipo de dato \>
+
+# Estructuras de datos
+
+En R hay varios esquemas para guardar los datos, los mas comunes son:
+
+-   Vectores atomicos
+-   Listas
+-   Factores
+-   Matrices
+-   Dataframes
+
+Cada uno de ellos tiene su forma particular de manejar los tipos de datos que contienen.
+
+## Vectores
+
+Los vectores son la estructura mas comun. Si utilizas la funcion crearas un *vector atomico*. Estos tienen varias caracteristicas
+
+> c(\< uno o mas elementos \>)
+
+-   Class: Estos solo pueden tener un solo tipo o clase de dato.
+-   Lenght: la cantidad de unidades o objetos que tienen
+
+```{r}
+vector_edades_aleatoreas <- c(sample(15:25, 7)) 
+# sample() permite elegir aleatoreamente un numero x de elementos de un vector
+
+is.numeric(vector_edades_aleatoreas)
+
+is.integer(vector_edades_aleatoreas)
+
+class(vector_edades_aleatoreas)
+length(vector_edades_aleatoreas)
+```
+
+En el codigo anterior he creado un vector que contiene numeros elegidos al azar en el rango 15:25 y he confirmado que es de tipo numerico y de tipo integer. Es de ambos tipos por estar compuesto por numeros enteros. Sin embargo si yo hago lo siguiente>
+
+```{r}
+vector_total_horas_descanso <- sample(seq(4.6, 10, 0.8), 7)
+# seq() te permite generar numeros en secuencia en un rango establecido de acuerdo a un valor definido
+
+is.numeric(vector_total_horas_descanso)
+
+is.integer(vector_total_horas_descanso) # esto da FALSE por ser numeros decimales
+```
+
+Ahora voy a crear un vector con varios nombres y ha verificar su estructura con la funcion **str()**, la cual me dira:
+
+-   La clase o tipo de vector
+-   Su lenght expresada como un rango en un corchete -> [rango]
+-   Sus contenidos
+
+```{r}
+vector_con_nombres <- c("Hector", "Sara", "Lucia", "Jose", "Karla", "Sofia", "Manuel" )
+
+str(vector_con_nombres)
+```
+
+Luego voy a crear un vector logico a partir de los valores de otro vector
+
+```{r}
+es_mayor_de_edad <- vector_edades_aleatoreas > 18
+
+es_mayor_de_edad
+```
+
+Las operaciones con vectores se realizan por cada elemento que tenga. Entonces en el codigo anterior R reviso si cada numero era mayor a 18 y coloco TRUE o FALSE de acuerdo al resultado. Pasa lo mismo con operaciones matematicas y la ejecucion de algunas funciones.
+
+### Transformacion entre diferentes tipos
+
+R trae funciones para transformar un vector de un tipo a otro. Esta accion tambien se conoce como *coercion*. R tiene 2 tipos de coercion:
+
+-   Coercion implicita: R transforma el dato de forma automatica
+-   Coercion explicita: ocurre cuando le indicamos a R con una funcion para que transforme el dato.
+
+Las funciones para transformar datos se les conoces como la familia **as.**:
+
+> as.\< tipo de dato \>
+
+Por ejemplo si quiero cambiar los numeros de un vector a character string:
+
+```{r}
+as.character(vector_edades_aleatoreas) # Les saldran comillas a los numeros
+```
+
+Pero no puedo hacer lo contrario:
+
+```{r}
+as.numeric(vector_con_nombres)
+```
+
+Simplemente no podemos cambiar facilmente texto a numeros\*
+
+\*NOTA: internamente el alfabeto esta codificado en numeros. Es decir que cada letra representa un numero y por eso puedo verificar lo siguiente
+
+```{r}
+"a" < "b"
+```
+
+```{r}
+"b" < "a"
+```
+
+Y se pueden comparar character strings
+
+```{r}
+
+"Sofia" == "Karla"
+
+```
+
+Es todo un sistema complejo que no abarcaremos en este curso. Pero lo que tienes que tomar en cuenta es que puedes comparar character strings entre si 
+
+Logic vs numeric
+
+Podemos cambiar valores logicos a numeros
+
+```{r}
+print(es_mayor_de_edad)
+
+as.numeric(es_mayor_de_edad)
+```
+
+-   1 equivale a TRUE
+-   0 equivale a FALSE
+
+## Listas
+
+Se describen como una coleccion ordenada de elementos. Las listas permiten guardar varios objetos de diferentes:
+
+-   Clases
+
+    -   Puedo guardar numeros, characters strings, etc.
+
+-   Lenght
+
+    -   No importa que un vector tenga lenght = 8 y otro lenght = 1250.
+
+-   Estructura
+
+    -   Puedo guardar vectores, factores, matrices, dataframes e incluso otra lista dentro de una lista.
+
+Por ejemplo, voy a unir bajo una lista todos los vectores que creamos antes con la funcion **list()**:
+
+```{r}
+
+lista_de_vectores <- list(vector_con_nombres, vector_edades_aleatoreas, vector_total_horas_descanso, es_mayor_de_edad)
+
+print(lista_de_vectores)
+```
+
+Aqui pueden ver su estructura. Cada numero dentro de doble corchete { [[\#]] } representa el indice del vector por el cual podemos referirle:
+
+```{r}
+lista_de_vectores[[2]]
+# He llamado al vector 2 
+```
+
+Pero si quisiera un elemento especifico de uno de los vectores, tendria que hacer esto:
+
+```{r}
+lista_de_vectores[[2]][3]
+# He llamado al objeto numero 3 del vector 2 
+```
+
+## Factores
+
+Son characters strings que estan organizados en etiquetas y niveles. Es la forma en la que R guarda datos categoricos. Tienen un orden especifico.
+
+```{r}
+frecuencia_ejercicio <- sample(c("nunca", "a veces", "mucho", "siempre"), 7, replace = TRUE)
+# sample() con character strings y el arg 'replace = TRUE' que permite que se repitan los datos
+
+str(frecuencia_ejercicio)
+
+
+```
+
+Ahora transformare esas categorias a factor con sus etiquetas y niveles. Prestar atencion a los argumentos:
+
+-   ***x***es el vector con los character strings
+
+-   ***ordered = TRUE*** , lo indicamos para que R entienda que tienen un orden especifico. Se puede omitir en caso de que no sea necesario identificar su orden.
+
+-   En ***levels*** tienes que colocar en el orden deseado cada uno de los strings.
+
+    -   Si lo omites, R asignara los ***levels*** de forma ascendente.
+
+-   En ***labels***
+
+    -   Puedes colocar una etiqueta para cada valor utilizando **c()**. Pueden ser los mismo que en ***levels*****.**
+    -   Pueden ser abreviaturas agrupadas con **c()**.
+    -   Esto cambiara las categorias originales a las etiquetas que le colocaste.
+
+A continuacion solo ejecutare la funcion sin especificar los argumentos:
+
+```{r}
+factor_frecuencia_ejercicio <- factor(frecuencia_ejercicio, ordered = TRUE)
+
+print(factor_frecuencia_ejercicio)
+# estan en orden alfabetico
+
+```
+
+Ahora indicamos el arg *levels*:
+
+```{r}
+factor_frecuencia_ejercicio <- factor(frecuencia_ejercicio, ordered = TRUE,
+                                      levels = c("nunca", "a veces", "mucho", "siempre"))
+
+print(factor_frecuencia_ejercicio)
+
+
+```
+
+Indicamos *labels* como numeros:
+
+```{r}
+factor_frecuencia_ejercicio <- factor(frecuencia_ejercicio, ordered = TRUE,
+                                      levels = c("nunca", "a veces", "mucho", "siempre"),
+                                      labels = c(0, 1, 2, 3))
+
+print(factor_frecuencia_ejercicio)
+```
+
+Tambien podemos usar la funcion **as.factor()** para tranformar un vector a factor rapidamente. Solo es recomendable si las categorias no tienen un orden estricto.
+
+```{r}
+as.factor(vector_con_nombres)
+```
+
+## Matrices
+
+Es un objeto bidimensional que organizan los datos en columnas y filas. Las columnas y las filas deben ser de la misma lenght. Solo puede guardar un tipo o clase de dato (como los vectores). Las columnas y las filas no tienen nombre, tienen un indice (index) al cual nos referimos utilizando los corchetes { [#fila, #columna] }
+
+para crear una hay que utilizar la funcion **matrix()** que tiene los siguientes argumentos:
+
+-   ***data*** = los datos que quieres meter en la matriz
+-   ***nrow*** = el numero de filas que quieres que tenga
+-   ***ncol*** = el numero de columnas que quieres que tenga
+-   ***byrow*** = Si es FALSE (por defecto) R llena la matriz por columnas, si es TRUE se llena la matriz por filas
+
+La distribucion de los datos en una matriz es guiada por columnas por defecto. Es decir que llenara cada columna con los datos que le asignemos.
+
+Las dimensiones son importantes. Voy a crear una matriz de 4x5 [4 filas, 5 columnas] con los numeros del 1 al 20 y el arg *byrow = false*
+
+```{r}
+matriz_por_columnas <- matrix(1:20, ncol = 5, byrow = FALSE)
+
+print(matriz_por_columnas)
+```
+
+Ahora con *byrow = TRUE*:
+
+```{r}
+matriz_por_filas <-  matrix(1:20, ncol = 5, byrow = TRUE)
+
+matriz_por_filas
+```
+
+Ven la diferencia?
+
+Ahora para seleccionar un numero de una matriz, se utilizan los corchetes para identificar su fila y su columna
+
+```{r}
+matriz_por_columnas[2,5]
+
+matriz_por_filas[2,5]
+```
+
+Se nota la diferencia.
+
+Para poner un ejemplo de la vida real, ver elemento de una matriz es como buscar una coordenada especifica en tu tarjeta de coordenadas del banco.
+
+## Dataframes
+
+Es una estructura que puede almacenar vectores de distintos tipos en columnas y filas. Es lo mas parecido a una tabla de Excel o Google Sheets. Es la estructura con la que mas trabajaremos ya que es el formato para guardar datos mas organizada.
+
+La condiciones de un dataframe:
+
+-   Cada columna solo almacena un tipo de dato especifico
+
+-   Todas las columnas tienen la misma length
+
+-   Cada columna representa una variable
+
+-   Cada fila representa una observacion
+
+Voy a crear un dataframe con todos los vectores que se han realizado a lo largo de la clase. Por esa razon todos tienen **length = 7.** La funcion **data.frame()** es la que se utiliza para crear dataframes. De forma sencilla solo hay que listar los nombres de los vectores que queramos utilizar para crear el dataframe. Pueden ver la lista de argumentos que tiene la funcion ejecutando ?data.frame en la consola.
+
+```{r}
+df_de_la_clase <- data.frame(vector_con_nombres, # cada uno sera una columna
+                             vector_edades_aleatoreas, 
+                             vector_total_horas_descanso, 
+                             es_mayor_de_edad, 
+                             factor_frecuencia_ejercicio)
+
+# df es la forma de abreviar dataframe
+
+df_de_la_clase
+```
+
+Como manipulamos un dataframe?
+
+-   Para referirnos a una columna entera podemos hacer 2 cosas
+
+    -   Utilizamos el \$ para seleccionar la columna por nombre
+
+```{r}
+df_de_la_clase$vector_con_nombres
+```
+    - Podemos elegir la columna por su numero de indice [,#] 
+```{r}
+df_de_la_clase[,1]
+# De esta forma al dejar el espacio de la fila sin nada, le inidcamos a R que queremos la columna 1. # Sirve tambien de forma inversa para seleccionar filas 
+
+
+```
+Digamos que quiero saber la informacion de Sara, quien ocupa la fila 2 en el dataframe 
+```{r}
+df_de_la_clase[2,]
+```
+
+
+Tambien podemos elegir rangos de los datos contenidos del df. Por ejemplo, para ver los nombres, el total de horas de descanso y la frecuencia de ejercicio de las 3 primeras observaciones tengo que plantear lo siguiente:
+
+```{r}
+df_de_la_clase[1:3, c(1, 3, 5)]
+
+# Al utilizar c() generas un vector que contiene los numeros de las columnas, R lo entiende y busca a cada columna por su numero
+```
+
+Tambien podemos hacer un subset de la data para tener las variables que nos interesan mas. Quiero otro df que tenga los nombres, si es mayor de edad y su frecuencia de ejercicio
+
+```{r}
+df_subset <- df_de_la_clase[, c(1, 4, 5)]
+
+df_subset
+```
+
+
+Con este dataframe podriamos hacer algun grafico
+
+```{r}
+plot(x = df_de_la_clase$vector_edades_aleatoreas, y = df_de_la_clase$vector_total_horas_descanso)
+```
+
+
+En la siguiente clase veremos como utlizar el paquere **dplyr** para manipular los datos de un dataframe de forma mas eficiente. 
+
