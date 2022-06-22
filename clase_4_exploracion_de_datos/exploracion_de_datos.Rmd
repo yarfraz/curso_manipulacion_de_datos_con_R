@@ -1,0 +1,626 @@
+---
+title: "Clase_4"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# **Fases del analisis de datos**
+
+-   Subir / importar la data
+
+-   Limpiar los datos
+
+-   Transformar los datos
+
+-   Visualizar los datos
+
+-   Hacer modelos de los datos
+
+-   Comunicar hallazgos
+
+# Setup inicial
+
+## Working Directory
+
+```{r}
+setwd("~/github/Curso_R/")
+```
+
+## Paquetes
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(visdat)
+library(stringr)
+library(psych)
+library(DescTools)
+```
+
+## *Subir / Importar datos*
+
+En R se pueden importar muchos tipos de datos. Desde archivos excel
+hasta imagenes un png. Para este curso nos interesa especificamente 2
+tipos de archivos: CSV y EXCEL, por ser los mas comunes.
+
+Con la funcion read_csv() podemos leer los datos del formato .csv (comma
+separated values). Es necesario que coloques la direccion del archivo en
+tu pc entre comillas. Esta funcion les muestra informacion descriptiva
+sobre el dataset.
+
+```{r}
+df_rrhh <- read_csv("~/github/Curso_R/dataset_clases/rrhh_datos.csv") 
+```
+
+Pero tambien puedes importar tus datos desde la interfaz. Para eso sigue
+los siguientes pasos:
+
+1.  Ve a la parte superior derecha y busca el icono que dice "Import
+    Dataset"
+2.  Al presionarlo aparecera una lista desplegable con los formatos de
+    dataset que R puede leer.
+3.  Elige el formato que corresponda con tu dataset. El formato "From
+    Text (readr)" corresponde a CSV con el paquete readr. Usar este
+    preferiblemente
+4.  Al hacer click en un formato se abrira una pestaña en la que podras
+    elegir y visualizar tu data
+5.  Clickea "Browse" para buscar tu data en tus archivos.
+6.  Selecciona tu archivo y luego veras un previsualizacion de la dato.
+7.  Dale "Import" en la parte inferior derecha. Listo. R correra el
+    codigo para subir la data.
+8.  Opcional: puedes editar con las opciones disponibles para manipular
+    alguna informacion de tus datos. Esto en caso que quieras cambiar la
+    clase de alguna columna, entre otras cosas.
+
+## Exploracion inicial
+
+Nos permite entender como estan estructurados los datos con los que
+vamos a trabajar. Luego de entender su estructura y contenidos podemos
+planificar que se necesita hacer con estos datos
+
+Esta data proviene de Kaggle, una web para compartir datasets y codigo en la comunidad. Si entras a este link puedes revisar la informacion del dataset (codebook) https://rpubs.com/rhuebner/hrd_cb_v14 
+
+### 1. Pueden hacer click en la data en el enviroment para verla
+
+Esto permite ver los datos como si fuera una hoja de excel. Es la forma
+manual de ver los contenidos de sus datos. Puede ser util si tienes una
+data con pocas filas y columnas. De lo contrario, no tiene sentido.
+
+### 2. Pueden usar funciones para ver partes de sus datos
+
+Hay diversas funciones disponibles para hacer esto. Las mas comunes son:
+
+#### **spec()**
+
+Viene integrado con el paquete **readr**. Les permite ver el nombre y la
+clase de todas las columnas.
+
+```{r}
+spec(df_rrhh)
+
+```
+
+#### **head()**
+
+Les permite ver las primeras filas de un dataframe:
+
+```{r}
+head(df_rrhh)
+
+
+```
+
+Tiene un argumento que permite indicarle cuantas filas mostrar:
+
+```{r}
+head(df_rrhh, 2)
+
+
+```
+
+#### **tail()**
+
+Permite ver las ultimas filas del dataframe. Al igual que head() tambien
+puedes indicarle el numero de filas que quieres ver
+
+```{r}
+tail(df_rrhh, 10)
+```
+
+#### **Summary()**
+
+Permite hacer algunas observaciones y calculos estadisticos sobre las
+variables de nuestra data.
+
+Para variables numericas nos muestra:
+
+-   Valor minimo
+-   1er cuantil (el valor que se encuentra al 25% de la distribucion)
+-   La mediana
+-   La media aritmetica
+-   3er cuantil (el valor que se encuentra al 75% de la distribucion)
+-   Valor maximo
+-   Cantidad de datos ausentes (NA)
+
+Para variables de tipo factor nos muestra las categorias y su cantidad.
+
+```{r}
+summary(df_rrhh)
+```
+
+#### **glimpse()**
+
+Es la version del paquete dplyr para observar los datos. Te da la
+siguiente informacion del dataset:
+
+-   Numero de filas
+-   Numero de columnas
+-   Nombre de cada variable (columna), su clase y una muestra de sus
+    contenido
+
+```{r}
+glimpse(df_rrhh)
+```
+
+#### Visualizar datos ausentes (NA)
+
+Revisar los NA de tus datos es un deber. Para eso utilizaremos una
+funcion del paquete **visdat**.
+
+La funcion *vis_miss()* proyecta un visualizacion de los datos en la que
+señala en gris oscuro los datos NA. Esto sirve para tener una imagen de
+los datos ausentes de nuestros datos
+
+```{r}
+vis_miss(df_rrhh)
+```
+
+Que puedes entender del grafico?
+
+Que crees que deberiamos hacer?
+
+## *Limpieza de los datos*
+
+Necesitamos tener la data limpia para poder trabajar con ella. Pero que
+significa que este limpia?
+
+-   Que cada variable de nuestros datos este representada en una columna
+-   Que cada unidad de informacion represente una fila
+-   Que los datos se puedan observar en el formato de una tabla
+-   Que no existan datos ausentes
+-   Que los datos de las columnas no tengan datos extraños
+
+### Cambiar nombre a las columnas
+
+Existen varias conveciones sobre como deben nombrarse las objetos en R.
+Siempre hay que ser descriptivos con nuestro codigo. Por eso lo mas
+razonable es ponerle nombres claros y concisos a los objetos que
+creamos. Pero esto implica tambien que no podemos extendernos mucho.
+
+R tiene varias guias de estilo. A lo largo del curso hemos utilizado
+*The Tidyverse Style Guide* (<https://style.tidyverse.org/syntax.html>).
+De acuerdo a esta guia, los nombres deben tener el siguiente formato:
+
+-   Texto en minuscula
+-   Los espacios deben ser remplazados con "\_"
+
+Con este formato vamos a cambiar los nombres de las variables del
+dataset utlizando la funcion **rename** de dplyr.
+
+Para usar esta funcion se escribe: *nombre modificado* = *nombre actual*
+
+```{r}
+df_rrhh <- df_rrhh %>% # asignamos el cambio a la data y utilizamos el pipe operator 
+  rename(
+   emp_name = Employee_Name, # puede abreviarse
+   emp_id = EmpID,
+   po_id = PositionID,
+   po_name = Position,
+   us_state = State, # mas descriptivo
+   age = Age,
+   sex = Sex,
+   marital_status = MaritalDesc, # mas descriptivo
+   citizenship = CitizenDesc,
+   latino = HispanicLatino,
+   race = RaceDesc, # mas corto
+   hire_date = DateofHire,
+   term_date = DateofTermination,
+   term_reason = TermReason,
+   employment_status = EmploymentStatus, # mas largo pero mas descriptivo
+   department = Department,
+   manager_name = ManagerName,
+   manager_id = ManagerID,
+   recruitment_source = RecruitmentSource,
+   performance_score = PerformanceScore,
+   engagement_survey = EngagementSurvey,
+   emp_satisfaction = EmpSatisfaction,
+   special_proj_count = SpecialProjectsCount,
+   last_perf_rev_date = LastPerformanceReview_Date,
+   days_late_last_30 = DaysLateLast30,
+   absences = Absences
+   
+  )
+
+
+```
+
+Ejecutamos glimpse para ver los cambios
+
+```{r}
+
+glimpse(df_rrhh)
+```
+
+Una vez hayamos cambiado los nombres. Tendremos 1 de las 5 condiciones
+para tener una tidy data.
+
+### Enfrentar los NA
+
+Como ya vimos, nuestra data tiene varios NA regados en su interior.
+Debemos tratar estos NA por las siguientes razones>
+
+-   Algunas funciones pueden verse afectadas por la presencia de NAs en
+    los datos
+
+-   La ausencia de un dato puede significar:
+
+    -   Una falla tecnica al obtener los datos.
+    -   Un error humano.
+    -   Dificultades al medir la variable.
+    -   Una ausencia real y justificada en los datos. Por ejemplo, en
+        los resultados de un item no obligatorio de una encuesta.
+
+Para cada caso debemos de tener un plan para resolver la falta de
+informacion. Por eso debemos saber que hacer al encontrar NA en nuestros
+datos.
+
+#### 1. Entender su naturaleza
+
+```{r}
+vis_miss(df_rrhh)
+```
+
+Con esta distribucion, se pueden notar 2 cosas.
+
+-   Hay datos ausentes esparcidos por toda la data de manera aleatorea
+-   La columna term_date tiene muchos datos ausentes (66.5%)
+
+Que la columna que representa la fecha de terminacion de contrato de un
+empleado tenga muchos NA no es un misterio. Simplemente quienes siguen
+activos no tienen una fecha de terminacion. Eso lo podemos comprobar:
+
+Vamos a observar la columna term_date junto con hire_date y
+employment_status:
+
+```{r}
+df_rrhh %>% 
+  select(employment_status, hire_date, term_date) %>% 
+  head(10)
+```
+
+Ahora vamos a contar la cantidad de datos ausentes por employment_status
+
+```{r}
+df_rrhh %>% 
+  select(employment_status, term_date) %>% 
+  group_by(employment_status) %>% 
+  summarise(n_na = sum(is.na(term_date)))
+```
+
+Con esto podemos comprobar que hay 204 personas actualmente laborando y
+por tanto su term_date es NA. Entonces estos Na no se deben eliminar
+porque son congruentes con la realidad de los datos.
+
+**sum(is.na(variable))** es la forma que tenemos para contar la cantidad
+de NA. Funciona porque TRUE = 1 y la funcion sum() suma los TRUE que
+arroja is.na()
+
+si aplicamos:
+
+```{r}
+sum(is.na(df_rrhh)) # Obtenemos el numero total de NA en la data
+```
+
+Utilizamos esos dos numeros y
+
+```{r}
+341 - 204
+```
+
+137 NA que deberiamos eliminar
+
+Tambien puede ser util saber la cantidad de NA por columna, porque al
+eliminar NA en realidad eliminamos las filas o las observaciones que los
+contienen.
+
+Usaremos **sapply** una funcion que sirve para ejecutar funciones en
+todos los elementos de un vector. Cuando lo usamos en un dataframe,
+ejecuta una funcion por columnas para cada elemento de ellas. Lo util
+para este caso es que devuelve un vector con los nombres de la columna y
+cuantos NA tiene.
+
+Tambien usaremos **function(x)** es una funcion para crear funciones. En
+este caso particular he creado una *funcion anonima* (porque no tiene
+nombre) que sirve para contar los na de un vector. "x" representa los
+argumentos de la funcion. En este caso X es una columna del dataframe ya
+que esta dentro del sapply y esta funcion divide cada una de las
+columnas en vectores independientes y luego les aplica la funcion que le
+indiquemos
+
+```{r}
+na_columnas <- sapply(df_rrhh, function(x) {sum(is.na(x))}) # vector con cuantos NA hay por col
+
+na_columnas <- sort(na_columnas, decreasing = FALSE) # arreglamos de forma ascendente
+
+na_columnas_df <- data.frame(na_columnas) # lo convertimos en un dataframe
+tail(na_columnas_df, 10) # obtenemos las columnas con mas datos ausentes
+```
+
+Esto nos da una idea de cuantas filas hay que eliminar de nuestros
+datos.
+
+#### 2. Elimanar los datos ausentes
+
+si aplicamos la funcion **na.omit(** <df> ) eliminaremos todos los datos
+ausentes y solo se quedaran en nuestra data aquellas filas que no tengan
+ningun NA.
+
+Sin embargo no podemos aplicar esa solucion a los datos porque
+eliminariamos mas 60% de los datos.
+
+Hay que hacer una solucion mas inteligente.
+
+Con dplyr la forma de eliminar datos NA es usando un *filtrado inverso*:
+
+-   **filter** para filtrar lo datos
+-   **!** para negar el resultado (si es TRUE, sera FALSE y viceversa)
+-   **is.na()** para encontrar los NA
+
+> filter(!is.na(variable)
+
+Es la forma de filtrar los datos que **NO** son NA.
+
+```{r}
+# Visualizamos que la solucion elimino los NA deseados
+df_rrhh %>% 
+  filter(!is.na(po_id), 
+         !is.na(absences),
+         !is.na(manager_name),
+         !is.na(last_perf_rev_date),
+         !is.na(emp_satisfaction), 
+         !is.na(marital_status),
+         !is.na(citizenship)) %>% 
+  vis_miss()
+
+```
+
+```{r}
+# Asignamos el nuevo dataset a una nuevo objeto
+
+sin_na_df_rrhh <- df_rrhh %>% 
+  filter(!is.na(po_id), 
+         !is.na(absences),
+         !is.na(manager_name),
+         !is.na(last_perf_rev_date),
+         !is.na(emp_satisfaction), 
+         !is.na(marital_status),
+         !is.na(citizenship))
+```
+
+Con esto tenemos un dataset sin NA. Tambien podemos comprobar que la
+columna term_date este bien de esta forma:
+
+```{r}
+sin_na_df_rrhh %>% 
+  select(employment_status, term_date) %>% 
+  group_by(employment_status) %>% 
+  summarise(n_na = sum(is.na(term_date)))
+```
+
+### Observar los valores de cada columna
+
+Necesitamos saber si los datos de nuestras columnas son congruentes y
+que no haya datos extranos.
+
+Para manipular datos extraños se suelen seguir 3 procesos:
+
+-   Eliminar los datos extraños
+-   Cambiar el dato extraño a un valor existente o equivalente (si es posible)
+-   Crear una nueva categoria o valor que represente al dato, asi dejara de ser extraño.
+
+Obviamente dependiendo del contexto de sus datos y su naturaleza podran aplicar estas estrategias. Sin embargo, se frecuenta eliminar los datos extraños porque es la mas sencillo y eficiente. 
+
+Hay 4 columnas (3 character, 1 numeric) que tienen datos extraños, les muestro
+1 y el resto se las dejo a ustedes:
+
+-   po_name: es la mas dificil de identificar por la cantidad de
+    categorias que tiene.
+-   ?
+-   ?
+-   ?
+
+Podrian revisar todas las variables categoricas una a una, pero eso les tomaria bastante tiempo. 
+
+Les mostrare una forma de revisar las categorias o los rangos de las columnas, de acuerdo a si es numeric o character, de un dataframe:
+
+Primero creare una funcion: 
+```{r}
+ver_rangos_categorias <- function(x) {
+  if(is.numeric(x)) {
+    range(x)
+  } else {
+    unique(x)
+  }
+}
+```
+
+Explicacion:
+
+* El *if* de la funcion busca revisar si el objeto "x" es un numero
+* Si "x" es un numero (is.numeric(x) == TRUE), a "x" se le aplica la funcion *range()*.
+* Pero si "x" no es un numero (is.numeric(x) == FALSE), entonces se le aplica la funcion *unique()* ya que hay bastante probabilidad de que "x" sea texto.
+  + *unique()* es una funcion que extrae los valores unicos de un vector. 
+
+Luego utilizamos *sapply()* para aplicar **ver_rangos_categorias** por cada columna de la data y nos devuelva un objeto de tipo lista con los rangos y categorias de cada columna. 
+
+```{r}
+categorias_rangos_df <- sapply(sin_na_df_rrhh, ver_rangos_categorias)
+
+```
+
+Con esto podemos revisar de forma mas accesible los datos de cada columna
+
+#### Datos extraños en variables de tipo character
+
+Si presionas el objeto **categorias_rangos_df** que creamos podemos ver explicitamente las categorias y rangos que tienen cada columna. Con esta info podemos confirmar si hay datos extraños de forma visual. Pero hay columnas que tienen muchas categorias o datos unicos, como la columna que tiene los nombres, por eso vamos a tener que proyectar en la consola los contenidos de esa columna. 
+
+Anteriormente, mencione que la columna po_name tenia datos extraños. Podemos ver sus datos unicos utilizando el $ o []:
+```{r}
+categorias_rangos_df$po_name
+```
+
+
+Luego revisa el resto de columnas para asegurarnos de que no tengan datos extraños:
+.
+.
+.
+.
+.
+.
+
+En po_name "pasante subpagado" no es una categoria acorde al nombre de la posicion. En este caso sabemos que un pasante es una posicion dentro de la empresa. Solo tendriamos que colocarle un nombre acorde a estos datos: Intern
+
+En la columna sex aparece "princesa" como categoria. Podemos cambiarla a F (Female, Femenino)
+
+Y en la columna latino se repite Yes y No en minuscula. Eso lo podemos modificar
+
+
+
+
+Cambios en los character strings de una columna con *mutate()* y *str_replace()* 
+
+*str_replace()* permite cambiar un patron de texto por otro. Sigue la siguiente estructura: 
+
+- str_replace(un vector, "texto que quieres reemplazar", "texto de reemplazo")
+
+```{r}
+sin_na_df_rrhh <- sin_na_df_rrhh %>% # asigno a si mismo para realizar cambios
+  mutate(po_name = str_replace(po_name, "pasante subpagado", "Intern"),
+         sex = str_replace(sex, "princesa", "F"), 
+         latino = str_to_lower(latino)) #str_to_lower cambia los characters de un vector a  minisculas 
+  
+```
+
+
+Ahora que hicimos los cambios, y nos cercioramos que no existan mas datos extraños en variables categoricas, podemos cambiar las variables deseadas a factor para que sean adecuadas para un analisis estadistico. 
+
+En este caso usare *across*, pero quiero excluir las columnas con los nombres de los empleados y managers para que queden fuera de la transformacion a factor. Tambien cambiare las columnas de id a factor. 
+
+```{r}
+fact_sin_na_rrhh <- sin_na_df_rrhh %>% 
+  select(-emp_name, -manager_name) %>% 
+  mutate(across(where(is.character), as.factor), 
+         po_id = as.factor(po_id), 
+         manager_id = as.factor(manager_id))
+```
+
+Podemos hacer *summar()* para ver mayor informacion de las variables categoricas. 
+
+```{r}
+summary(fact_sin_na_rrhh)
+```
+
+
+#### Revisar datos numericos
+
+En este caso tenemos que ver la variable que falta. 
+
+Hay 2 formas de ver si una variable numerica tiene datos extraños>
+
+* Viendo su rango, pero esto depende mucho de lo que esos numeros representen. Ademas esta limitado a los extremos.
+
+* Observando su distribucion en un boxplot o grafico de caja. Este grafico nos muestra la distribucion de una variable numerica a traves de los cuartiles, q25 y q75 forman la "caja", la mediana (linea mas oscura), y tambien nos muestra los outliers o datos atipicos / extremos.
+
+La variable edad muestra un rango de 27-99. Tener 99 años y trabajar en una empresa no debe ser normal. Podemos ver un boxplot para ver la distribucion de la edad
+```{r}
+boxplot(fact_sin_na_rrhh$age)
+```
+
+En este boxplot podemos ver que los circulos representan a los outliers. 
+
+Es recomendable que tus variables numericas no tengan outliers y hay mucha documentacion de como manipularlos para normalizar (hacer mas estandar) esos datos. Sin embargo aqui vemos que hay un dato que llega hasta 99. Ese dato es anomalo para la distribucion de la edad. 
+
+```{r}
+fact_sin_na_rrhh %>% 
+  select(age, po_name, sex, hire_date, term_date) %>% 
+  filter(age == 99)
+```
+
+
+Podemos eliminarlo facilmente:
+
+```{r}
+rrhh_df_limpio <- fact_sin_na_rrhh %>% 
+  filter(age < 99)
+  
+```
+
+Podemos verificar q
+
+```{r}
+glimpse(rrhh_df_limpio)
+```
+
+A partir de aqui pueden elegir las columnas que quieran para realizar analisis descritpivos 
+
+
+## Analisis descriptivo
+
+Podemos usar dplyr para calcular algunos descriptivos sobre esta empresa>
+
+```{r}
+rrhh_df_limpio %>% 
+  select(age, sex) %>% 
+  group_by(sex) %>% 
+  summarise(media = mean(age), 
+            edad_min = min(age),
+            edad_max = max(age))
+```
+
+Sin embargo hay otros paquetes que nos permite saar esas metricas sin escribir tanto
+
+**describe()**
+Describe los estadisticos principales de una variable numerica. 
+```{r}
+describe(rrhh_df_limpio$age)
+```
+
+**describeBy()**
+Describe los estadisticos principales de una variable numerica de acuerdo a los grupos de una variable categorica. 
+```{r}
+describeBy(rrhh_df_limpio$age, rrhh_df_limpio$sex)
+```
+
+
+Preguntas
+
+Cual de todos los departamentos tiene mayor cantidad de mujeres?
+
+
+Describe la variable edad de los empleados por promedio, minimo, maximo  de acuerdo al departamento
+
+
+Luego identifica cual es el area con personal mas joven y cual con personal mas anciano.De ellos describe lo siguiente:
+
+- Nombre 
+- Cargo 
+- Fecha de ingreso 
+- Estado laboral 
+- Fuente de reclutamiento
+- Puntaje de rendimiento
+- Puntaje de satisfaccion
