@@ -1,0 +1,288 @@
+---
+title: "paquete dplyr"
+author: "Yarfraz Nazuddeen"
+date: "6/6/2022"
+output: html_document
+---
+
+# Setup
+
+## Working Directory
+
+```{r}
+setwd("~/github/Curso_R/")
+```
+
+## Paquetes
+
+```{r message=FALSE, warning=FALSE}
+library(readxl) # paquete para leer archivos excel
+library(dplyr) # paquete para la manipulacion de datos
+```
+
+## Importar datos
+
+Importaremos nuestros datos desde un archivo excel
+
+```{r}
+students_grades_df <- read_xlsx("~/github/Curso_R/dataset_clases/clean_students_grades_data.xlsx")
+```
+
+## Observar nuestros datos
+
+```{r}
+glimpse(students_grades_df)
+```
+
+## Transformar la clase de las columnas
+
+Las columnas con datos descriptivos son de clase *character*. Esta clase no nos va a permitir categorizar nuestras observaciones.
+
+un character es solo texto, pero un factor es una categoria.
+
+Transformacion rapida con dplyr
+
+```{r}
+students_grades_df <- students_grades_df %>% 
+  mutate(across(where(is.character), as.factor))
+```
+
+Transformacion con las funciones basicas de R
+
+```{r}
+students_grades_df$race <- as.factor(students_grades_df$race)
+
+students_grades_df$gender <- as.factor(students_grades_df$gender)
+
+students_grades_df$p_lvl_educ <- as.factor(students_grades_df$p_lvl_educ)
+
+students_grades_df$lunch <- as.factor(students_grades_df$lunch)
+
+students_grades_df$prep_course_test <- as.factor(students_grades_df$prep_course_test)
+```
+
+# Introduccion a los verbos de dplyr
+
+## select
+
+Nos permite seleccionar columnas. Solo tenemos que escribir su nombre, o su indice (numero) para seleccionarla
+
+```{r}
+students_grades_df %>% 
+  select(1, race, 3:7, writing_score) %>% 
+  head(10)
+  # Aqui seleccione todas las columnas del dataset con diferentes formas de referenciarlas
+```
+
+**select** nos sirve para hacer un *subset* de nuestros datos para que sea mas especifico para nuestros objetivos
+
+```{r}
+subset_student_grades <- students_grades_df %>% 
+  select(-p_lvl_educ, -lunch)
+```
+
+En este ultimo codigo utilice un menos (-) para indicar que no queria las columnas que nombre.
+
+## filter
+
+Funciona para filtrar nuestros datos de acuerdo a una o varias condiciones logicas.
+
+Voy a filtrar la data para seleccionar solo a las mujeres que tienen una puntuacion mayor a 90 en matematicas:
+
+```{r}
+subset_student_grades %>% 
+  select(gender, math_score) %>% 
+  filter(gender == "female", 
+         math_score > 90)
+```
+
+## arrange
+
+Sirve para ordenar de forma decreciente o ascendente los datos a partir de una columna
+
+Quiero ver en orden descreciente a los hombres que tienen una puntuacion menor o igual a 30 puntos en lectura
+
+```{r}
+subset_student_grades %>% 
+  select(gender, prep_course_test, reading_score) %>% 
+  filter(gender == "male", 
+         reading_score <= 30) %>% 
+  arrange(desc(reading_score))
+```
+
+**NOTA:** por defecto, arrange ordena de forma ascendente. **desc()** sirve para indicarle que quieres ver los resultados en orden decreciente.
+
+## summarise
+
+Permite hacer calculos de las filas de una seleccion especifica. Esto hace que solo retornen los valores calculados como columnas de un nuevo dataframe. Puedes hacer calculos con funciones o de forma matematica.
+
+Para usarlo tienes que colocar un nombre para tu calculo, por ejemplo { "media" = la funcion o calculo a realizar }:
+
+```{r}
+subset_student_grades %>% 
+  select(gender, reading_score) %>% 
+  filter(reading_score <= 30) %>% 
+  summarise(minimo = min(reading_score), media = mean(reading_score), maximo = max(reading_score))
+```
+
+## group_by
+
+Sirve para agrupar los datos de acuerdo a los valores de una o varias columnas. Muy util para hacer calculos por categorias o grupos.
+
+**group_by** sirve junto a **summarise** para realizar calculos en los grupos creados. Sin embargo, summarise funciona solo en el primer grupo, en caso de que agrupes con varias columnas
+
+Por ejemplo, para saber cual es el puntaje minimo y la media en lectura de acuerdo al genero se procede de la siguiente forma:
+
+```{r}
+subset_student_grades %>% 
+  select(gender, reading_score) %>% # seleccionamos las columnas de interes
+  group_by(gender) %>% # elegimos la columna con los grupos de interes
+  summarise(minimo = min(reading_score), media = round(mean(reading_score), 2)) # calculos de interes
+# PRO TIP: round funciona para redondear numeros decimales, el 2 representa la cantidad de decimales que queremos
+```
+
+## count
+
+Sirve para contar las observaciones de una columna especifica.
+
+POr ejemplo, quiero contar cuantos hombres tienen 30 o menos puntos en lectura:
+
+```{r}
+subset_student_grades %>% 
+  select(gender, reading_score) %>% 
+  filter(gender == "male", 
+         reading_score <= 30) %>% 
+  count(gender)
+```
+
+Se utiliza mucho con group_by para contar el numero de observaciones por categorias. Digamos que quiero saber cuantos sujetos hay por categoria racial:
+
+```{r}
+subset_student_grades %>% 
+  select(race) %>% 
+  group_by(race) %>% 
+  count() # como es una sola columna seleccionada, no es necesario especificarle cual
+
+```
+## mutate
+
+Sirve para modificar variables sin eliminar el resto del dataset. Por eso sirve mucho para agregar nuevas variables calculadas. Se aplica de la siguiente forma
+
+nombre de la nueva variable / variable ya existente = calculo o funciones 
+
+
+
+```{r}
+subset_student_grades %>% 
+  select(gender, math_score, writing_score, reading_score) %>% 
+  mutate(promedio_de_notas = round((math_score + reading_score + writing_score) / 3, 2)) %>% 
+  head(10)
+```
+
+
+## transmute
+
+Sirve para crear nuevas variables a partir de calculos con otras. Solo que en este caso no se preservan las demas variables.
+
+Quisiera saber cual es el promedio de las notas de cada estudiante:
+
+```{r}
+subset_student_grades %>% 
+  select(contains("score")) %>% 
+  transmute(promedio_de_notas = round((math_score + reading_score + writing_score) / 3, 2))
+
+# PRO TIP: contains() es un helper de select que te permite seleccionar columnas por el contenido de su nombre. Simplemente selecciona las columnas que hagan match con el texto que coloques. 
+# PRO TIP: puedes buscar mas info sobre los select helpers https://dplyr.tidyverse.org/reference/select.html
+```
+
+## across
+
+Sirve para aplicar una funcion a traves de multiples columnas. 
+Es excepcional para transformar los valores de una o mas variables con **mutate**
+
+La forma de aplicarla es sencilla: 
+
+> funcion-mutate o summarise-(**across**({ columnas }, { funcion o calculo a aplicar }))
+
+  - { columnas }: 
+    - puede ser un conjunto de nombres agrupados con **c()**
+    - puede ser un rango de indices o numero de columnas agrupados con **c()**
+    - puede ser un helper como **where()** o **contains()** 
+  
+Como vimos al principio, el codigo de abajo tranforma las columnas de tipo character a factor
+```{r}
+students_grades_df %>% 
+  mutate(across(where(is.character), as.factor))
+  
+```
+
+
+## Preguntas de practica
+
+Cual es la media de los puntajes de matematicas de acuerdo al genero y a la realizacion del examen del curso de preparacion?
+
+
+```{r}
+subset_student_grades %>% 
+  select(gender, prep_course_test, math_score) %>% 
+  group_by(gender, prep_course_test) %>% 
+  summarise(media_math = mean(math_score))
+```
+
+
+Cuantas mujeres del grupo racial B realizaron el examen del curso de preparacion
+
+```{r}
+subset_student_grades %>% 
+  select(gender, race, prep_course_test) %>% 
+  filter(gender == "female", 
+         race == "group B", 
+         prep_course_test == "completed") %>% 
+  count()
+```
+
+Ordena de forma decreciente los puntajes medio en matematicas por grupo racial 
+
+```{r}
+subset_student_grades %>% 
+  select(race, math_score) %>% 
+  group_by(race) %>% 
+  summarise(math_mean_score = mean(math_score)) %>% 
+  arrange(desc(math_mean_score))
+```
+
+
+Cuantos tuvieron un puntaje promedio menor o igual a 45?
+
+```{r}
+subset_student_grades %>% 
+  select(math_score, writing_score, reading_score) %>% 
+  summarise(puntaje_promedio = round((math_score + reading_score + writing_score) / 3, 2)) %>% 
+  filter(puntaje_promedio <= 45) %>% 
+  count()
+
+```
+
+
+Como se distribuye el puntaje promedio del grupo E en matematicas, lectura y escritura de acuerdo al sexo?
+```{r}
+subset_student_grades %>% 
+  select(gender, race, math_score, writing_score, reading_score) %>% 
+  filter(race == "group E") %>% 
+  group_by(gender) %>% 
+  summarise(m_math_score = mean(math_score),
+            m_writing_score = mean(writing_score),
+            m_reading_score = mean(reading_score))
+```
+
+
+Cuantas personas por grupo racial tienen un puntaje promedio mayor a 90 puntos?
+
+```{r}
+subset_student_grades %>% 
+  select(race, math_score, writing_score, reading_score) %>% 
+  mutate(puntaje_promedio = round((math_score + reading_score + writing_score) / 3, 2)) %>% 
+  filter(puntaje_promedio > 90) %>% 
+  count(race)
+```
+
